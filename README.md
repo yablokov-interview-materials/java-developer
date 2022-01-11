@@ -98,7 +98,7 @@ ToDo: ответ
 
 ---
 
-[Java EE] (Java EE.md)
+[Java EE](Java EE.md)
 
 ### коллекции
 какие существуют коллекции?
