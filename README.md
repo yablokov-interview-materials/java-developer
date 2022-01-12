@@ -276,18 +276,36 @@ ToDo: ответ
 
 ## архитектура
 
-DDD. Расскажите в чем основная суть подхода
-принцип CQRS в чем состоит
-Clean Architecture
-onion architecture
-screaming architecture
-SOA архитектура
-SEDA архитектура
-монолиит, микросервисы и сервисмеш
-SOLID
-принцип KISS, DRY
+#### DDD. Расскажите в чем основная суть подхода
+ToDo: ответ
 
-spring
+#### принцип CQRS в чем состоит
+ToDo: ответ
+
+#### Clean Architecture
+ToDo: ответ
+
+#### onion architecture
+ToDo: ответ
+
+#### screaming architecture
+ToDo: ответ
+
+#### SOA архитектура
+ToDo: ответ
+
+### SEDA архитектура
+ToDo: ответ
+
+#### монолиит, микросервисы и сервисмеш
+ToDo: ответ
+
+#### SOLID
+ToDo: ответ
+
+#### принцип KISS, DRY
+
+## spring
 чем отличается DI от IoC
 расскажите про propagation (распространение транзакций)
 сколько существует уровней изоляции транзакций
