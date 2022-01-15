@@ -618,7 +618,7 @@ ToDo: ответ
 
 ---
 
-#### Уровни модели OSI
+#### Уровни модели OSI и модели TCP/IP
 ToDo: ответ
 
 ---
@@ -628,11 +628,44 @@ ToDo: ответ
 
 ---
 
+#### Какие существуют способы указания длины тела сообщения
+Ответ:
+* посредством указания в заголовке Content-Length количества байт, которые следует прочитать после окончания заголовков 
+(после пустой строки):
+  * при этом тело сообщения может состоять как из одной единой части (в случае с Content-Type: application/*), 
+  так и из нескольких (multipart/*), причем в случае наличия нескольких частей:
+    * Content-Length на уровне заголовков всего сообщения указывает суммарную длину
+      всех частей тела сообщения (включая разделители);
+    * для разделения частей сообщения используются разделитель (который указывается в заголовке boundary);
+* [посредством использования механизма chunked encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding):
+  * указывается заголовок `Transfer-Encoding: chunked`;
+  * тело сообщения разбивается на куски (chunk'и):
+    * первая строка chunk - это длина данных этого chunk (в байтах), которые начинаются со следующей строки;
+* посредством закрытия TCP соединения:
+  * не удастся воспользоваться в ситуации, когда в рамках одного TCP соединения последовательно отправляется 
+  несколько HTTP запросов.
+
+Подробнее см. [здесь](https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4).
+
+---
+
 #### Расскажите про tcp back pressure
 ToDo: ответ
 
 ---
 
+#### Что такое HTTP pipelining
+Ответ: ToDo:
+Подробнее см. [здесь](https://en.wikipedia.org/wiki/HTTP_pipelining).
+[Пример использования](https://github.com/apache/httpcomponents-core/blob/5.0.x/httpcore5/src/test/java/org/apache/hc/core5/http/examples/AsyncPipelinedRequestExecutionExample.java).
+
+---
+
+#### Что такое TCP no delay
+Ответ: ToDo:
+Подробнее см. [здесь](https://stackoverflow.com/questions/3761276/when-should-i-use-tcp-nodelay-and-when-tcp-cork).
+
+---
 
 ## Linux
 #### Что такое рут и почему опасно сидеть под ним?
