@@ -614,18 +614,323 @@ ToDo: ответ
 
 ---
 
+### Многопоточность
+
 #### Расскажите про принципы happens before
 ToDo: ответ
 
 ---
 
 #### Как я могу создать поток?
-ToDo: ответ
+
+Существует два способа создать поток, оба из которых базируются на оперировании классом `java.lang.Thread`.
+
+<details><summary markdown="span">Использование Runnable</summary>
+
+```java
+// создаем экземпляр потока, передавая ему в качестве аргумента конструктора реализацию Runnable(), в методе run() которого находится наш код
+// (поток на уровне ОС еще пока не создается и не запускается)
+Thread thread = new Thread(new Runnable() {
+    @Override
+    public void run() {
+        // some code
+    }
+});
+        
+// стартуем поток (будет выделен поток в ОС, и уже в рамках него вызван метод Runnable#run())
+thread.start();
+```
+
+</details>
+
+<details><summary markdown="span">Переопределение метода Thread.run()</summary>
+
+```java
+// создаем экземпляр класса наследника Thread, переопределяя у него метод run(), в который помещаем наш код
+// (поток на уровне ОС еще пока не создается и не запускается)
+Thread thread = new Thread() {
+    @Override
+    public void run() {
+        // some code
+    }
+};
+
+// стартуем поток (будет выделен поток в ОС, и уже в рамках него вызван метод Runnable#run())
+thread.start();
+```
+
+</details>
 
 ---
 
-#### Что такое thread-safe?
-ToDo: ответ
+#### Что такое race condition и thread-safe?
+
+<details><summary markdown="span">Race condition</summary>
+
+Состояние гонки (англ. race condition), также конкуренция — ошибка проектирования многопоточной системы или
+приложения, при которой работа системы или приложения зависит от того, в каком порядке выполняются части кода.
+
+Race condition происходит, когда два или более потока обращаются к общим ресурсам и пытаются их изменить одновременно.
+
+В связи с тем, что планировщик потоков ОС (thread scheduler) может переключаться между потоками в любой момент времени,
+то вы не знаете в каком порядке каждый из потоков будет обращаться к общим данным. Как следствие, результат изменения
+данных будет зависеть от алгоритма планировщика потоков ОС.
+
+Другими словами, потоки "соревнуются" (racing) за доступ и изменение данных.
+
+Проблема обычно происходит, когда один поток выполняет над общими данными "check-then-act" (сначала проверяет значение
+таких данных, а затем изменяет его в зависимости от него), а в это время другой поток выполняет какое-то действие
+над этими данными в промежутке между "check" и "act", например:
+
+```java
+if (x == 5) // The "Check"
+{
+   y = x * 2; // The "Act"
+
+   // If another thread changed x in between "if (x == 5)" and "y = x * 2" above,
+   // y will not be equal to 10.
+}
+```
+
+Самый простой способ для предотвращения race condition в такой ситуации - это, например, выстраивание блокировки вокруг
+всего блока "check-then-act":
+
+```java
+// Obtain lock for x
+if (x == 5)
+{
+   y = x * 2; // Now, nothing can change x until the lock is released. 
+   // Therefore y = 10
+}
+// release lock for x
+```
+
+</details>
+
+<details><summary markdown="span">Thread-safety</summary>
+
+Потоковая безопасность (англ. thread-safety) — это концепция программирования, применимая к многопоточным программам.
+Код потокобезопасен, если он функционирует исправно при использовании его из нескольких потоков одновременно.
+
+Это означает, что разные потоки могут обращаться к одним и тем же ресурсам без выявления ошибочного поведения или
+получения непредсказуемых результатов.
+
+Давайте рассмотрим основные подходы, которые позволяют достигнуть потоко-безопасности.
+
+<details><summary markdown="span">Stateless Implementations</summary>
+
+В большинстве случаев ошибки в многопоточных приложениях являются результатом неправильного разделения состояния между
+несколькими потоками.
+
+Поэтому первый подход, заключается в обеспечении потоко-безопасности с помощью реализаций без сохранения состояния.
+
+Чтобы лучше понять этот подход, давайте рассмотрим простой служебный класс со статическим методом, вычисляющим факториал
+числа:
+
+```java
+public class MathUtils {
+    public static BigInteger factorial(int number) {
+        BigInteger f = new BigInteger("1");
+        for (int i = 2; i <= number; i++) {
+            f = f.multiply(BigInteger.valueOf(i));
+        }
+        return f;
+    }
+}
+```
+
+Какие особенности мы наблюдаем:
+- метод не сохраняет/изменяет состояние;
+- метод не полагается на внешнее состояние.
+
+Как следствие, метод является идемпонетным (на одни и те же входные данные, он всегда возвращает одни и те же
+результаты).
+
+Все потоки могут безопасно вызывать метод factorial() и получать ожидаемый результат, не мешая друг другу и не изменяя
+выходные данные, генерируемые методом для других потоков.
+
+Следовательно, реализации без сохранения состояния — это самый простой способ обеспечить потокобезопасность.
+
+</details>
+
+<details><summary markdown="span">Immutable Implementations</summary>
+
+Если нам нужно разделить состояние между разными потоками, мы можем создать потоко-безопасные классы, сделав их
+состояние неизменяемым. Экземпляр класса является неизменяем, если его внутреннее состояние не может быть изменено после
+его создания.
+
+Самый простой способ создать неизменяемый класс в Java — объявить все поля private final и не предоставлять сеттеры:
+
+```java
+public class MessageService {
+    private final String message;
+
+    public MessageService(String message) {
+        this.message = message;
+    }
+    
+    // standard getter
+}
+```
+
+Так как состояние экземпляра класса не может быть изменено после его создания, то такая реализация является 
+потоко-безопасной.
+
+</details>
+
+<details><summary markdown="span">Thread-Local Fields</summary>
+
+Если нам в действительности нужно поддерживать состояние объекта, мы можем создать потоко-безопасные классы, которые не
+разделяют состояние между потоками, сделав их поля локальными для потока.
+
+Мы можем легко создавать классы, поля которых являются thread-local (определены в виде private полей у класса Thread).
+
+```java
+public class StateHolder {
+    private final String state;
+    // standard constructors / getter
+}
+
+// вариант 1: посредством использования private поля у экземпляра класса Thread
+public class MyThread extends Thread {
+  public static final StateHolder statePerThread =  new StateHolder("active");
+}
+
+// вариант 2: посредством использования готового класса ThreadLocal (делает примерно тоже самое)
+public class ThreadState {
+  public static final ThreadLocal<StateHolder> statePerThread = new ThreadLocal<StateHolder>() {
+    @Override
+    protected StateHolder initialValue() {
+      return new StateHolder("active");
+    }
+  };
+
+  public static StateHolder getState() {
+    return statePerThread.get();
+  }
+}
+```
+
+Thread-local поля очень похожи на обычные поля класса, за исключением того, что каждый поток, который обращается к
+ним через getter/setter, получает независимо инициализированную копию поля, так что каждый поток имеет свое собственное
+состояние.
+
+</details>
+
+<details><summary markdown="span">Synchronized Methods & Statements</summary>
+
+ToDo:
+
+</details>
+
+<details><summary markdown="span">Thread-safe Collections</summary>
+
+Мы можем использовать потоко-безопасные реализации коллекций.
+
+**Synchronized Collections**
+
+Например, мы можем обернуть любую существующую коллекцию в потоко-безопасную обертку (synchronization wrapper):
+
+```java
+Collection<Integer> syncCollection = Collections.synchronizedCollection(new ArrayList<>());
+Thread thread1 = new Thread(() -> syncCollection.addAll(Arrays.asList(1, 2, 3, 4, 5, 6)));
+Thread thread2 = new Thread(() -> syncCollection.addAll(Arrays.asList(7, 8, 9, 10, 11, 12)));
+thread1.start();
+thread2.start();
+```
+
+Стоит понимать, что синхронизированные коллекции используют внутреннюю блокировку в каждом методе (делают метод
+synchronized) без анализа необходимости или минимальных блоков кода, на самом деле, подлежащих синхронизации, что может
+приводить к значительному падению производительности.
+
+Тем не менее это означает, что к методам может обращаться только один поток за раз, в то время как другие потоки будут
+заблокированы до тех пор, пока метод не будет разблокирован первым потоком.
+
+**Concurrent Collections**
+
+В качестве альтернативы Synchronized Collections мы можем использовать Concurrent Collections для создания
+потокобезопасных коллекций.
+
+Java в рамках пакета `java.util.concurrent` предоставляет ряд concurrent collections, например `ConcurrentHashMap`:
+
+```java
+Map<String,String> concurrentMap = new ConcurrentHashMap<>();
+concurrentMap.put("1", "one");
+concurrentMap.put("2", "two");
+concurrentMap.put("3", "three");
+```
+
+В отличие от своих Synchronized Collections, Concurrent Collections обеспечивают потокобезопасность за счет
+разделения своих данных на сегменты. Например, в `ConcurrentHashMap` несколько потоков могут получать блокировки на разных
+сегментах `Map`, поэтому несколько потоков могут получить доступ к `Map` одновременно.
+
+Concurrent Collections намного более эффективны, чем Synchronized Collections, благодаря неотъемлемым преимуществам
+параллельного доступа к потокам, достигнутым за счет суженеия сегментов блокировки данных до реально необходимых и 
+выполнения ряды иных оптимизаций.
+
+Стоит отметить, что как Synchronized, так и Concurrent Collections делают потокобезопасной только саму коллекцию, а не
+ее содержимое.
+
+</details>
+
+<details><summary markdown="span">Atomic Objects</summary>
+
+Также возможно обеспечить потокобезопасность с помощью набора атомарных классов, предоставляемых Java, включая
+`AtomicInteger`, `AtomicLong`, `AtomicBoolean` и `AtomicReference`.
+
+Атомарные классы позволяют нам выполнять атомарные операции, которые являются потокобезопасными, без использования
+синхронизации. Атомарная операция выполняется в рамках единой, неделимой операции на машинном уровне.
+
+Рассмотрим пример:
+
+```java
+public class Counter {
+    private int counter = 0;
+    
+    public void incrementCounter() {
+        counter++;
+    }
+    
+    public int getCounter() {
+        return counter;
+    }
+}
+```
+
+Предположим, следующий race condition: два потока одновременно обращаются к методу `incrementCounter()`. В теории,
+значение поля счетчика должно бы стать равным 2. Но мы просто не можем быть уверены в результате, потому что потоки
+одновременно выполняют один и тот же блок кода, а приращение (incrementation) не является атомарным.
+
+Дело в том, что на машинном уровне оператор `++` не является атомарным, т.е. выполняет более одной последовательной
+операции:
+1. сначала вычитывает текущее значение переменной;
+2. затем увеличивает на 1 вычитанное значение;
+3. записывает увеличенное значение обратно в соответствующую область памяти. 
+
+Давайте создадим потоко-безопасную реализацию счетчика, используя `AtomicInteger`:
+
+```java
+public class AtomicCounter {
+    private final AtomicInteger counter = new AtomicInteger();
+    
+    public void incrementCounter() {
+        counter.incrementAndGet();
+    }
+    
+    public int getCounter() {
+        return counter.get();
+    }
+}
+```
+
+Это потокобезопасно, потому что incrementAndGet() является атомарным, т.к. он для выполнения этой операции использует 
+специальную атомарную инструкцию процессора - CAS (compare and swap).
+
+</details>
+
+Подробнее см. [здесь](https://www.baeldung.com/java-thread-safety) и [здесь](https://shipilev.net/blog/2014/safe-public-construction/).
+
+</details>
 
 ---
 
