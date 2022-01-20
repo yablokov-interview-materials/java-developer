@@ -2580,17 +2580,90 @@ Spring framework предоставляет следующие варианты 
 
 Подробнее см. [здесь](https://howtodoinjava.com/spring-core/spring-bean-life-cycle/).
 
-#### выполнится предестрой у прототайп бина?
-#### как я могу изменить бин перед помещением его в контейнер не изменяя код класса
-#### где я могу ставить аннотацию autowired
-#### в чем преимущество спринг для тестирования
-#### чем мок отличается от spy
+#### выполнится PreDestroy у bean со Scope=Prototype?
 
-в чем преимущество spring boot
+Нет. В отличие от других Scope, Spring не управляет полным life cycle Prototyp bean'а. Другими словами:
+- initialization callback методы lifecycle вызываются у bean;
+- а destruction lifecycle callbacks не вызываются у bean.
+
+Подробнее см. [здесь](https://docs.spring.io/spring-framework/docs/3.1.x/spring-framework-reference/html/beans.html#beans-factory-scopes-prototype).
+
+#### Как я могу изменить бин перед помещением его в контейнер не изменяя код класса?
+
+Воспользоваться `BeanPostProcessor`, например:
+
+```java
+public class CustomBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
+        // some manipulation under bean
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) {
+        // some manipulation under bean
+        return bean;
+    }
+}
+```
+
+Подробнее см. [здесь](https://stackoverflow.com/questions/29743320/how-exactly-does-the-spring-beanpostprocessor-work).
+
+---
+
+#### где я могу ставить аннотацию autowired
+- конструктор bean'а:
+  - будет применен для аргументов;
+- поля bean'а.
+
+---
+
+#### В чем преимущество спринг для тестирования?
+
+Приложение, ориентированное на инъекцию зависимостей, что предоставляет большие возможности для тестирования:
+- ресурсы (например, bean'ы) легко заменяются тестовыми ресурсами (например, заглушками).
+
+---
+
+#### Чем Mock отличается от Spy?
+
+- mock - полная заглушка объекта:
+  - вместо всех полей / методов используется заглушка;
+- spy - частичная заглушка объекта:
+  - для частей полей / методов используется заглушка, а остальные используются из реального объекта.
+
+---
+
+#### В чем преимущество spring boot?
+
+ToDo:
+
+---
 
 что будет результатом работы стартера?
-чем лучше java 11 перед 8 для контейнеров
-расскажите зачем применяется аннотация Conditional
+#### чем лучше java 11 перед 8 для контейнеров
+
+С Java 10 JVM теперь распознает ограничения, установленные группами управления контейнерами (cgroups).
+Ограничения памяти и ЦП могут использоваться для управления приложениями Java непосредственно в контейнерах, в том
+числе:
+- соблюдение memory limits, установленных в контейнере;
+- установка available cpus в контейнере;
+- установка cpu constraints в контейнере.
+
+Также, начиная с Java 11:
+- `-XshowSettings` (Container Metrics): display the system or container configuration;
+- `JDK-8197867`: improve CPU calculations for both containers and JVM hotspot (see PreferContainerQuotaForCPUCount).
+
+Подробнее см. [здесь](https://www.docker.com/blog/improved-docker-container-integration-with-java-10/).
+
+---
+
+#### Расскажите зачем применяется аннотация Conditional
+
+`@Conditional` позволяет указать условия, при которых должен создаваться bean.
+
+---
 
 работали ли с какими нибудь ORM?
 расскажите сколько существует уровней кэширования?
