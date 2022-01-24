@@ -2770,9 +2770,257 @@ Inversion of Control (инверсия управления) — это неки
 Dependency Injection (внедрение зависимостей) — это одна из реализаций этого принципа (помимо этого есть еще Factory
 Method, Service Locator).
 
-#### расскажите про propagation (распространение транзакций)
+#### Циклические зависимости в Spring
 
-ToDo: описать
+Когда контекст Spring загружает все bean, он пытается создать их в порядке, необходимом для их полноценной работы.
+
+При циклической зависимости Spring не может решить, какой из bean должен быть создан первым, поскольку они зависят друг
+от друга. В этих случаях Spring вызовет исключение `BeanCurrentlyInCreationException` при загрузке контекста.
+
+Это может произойти в Spring при использовании constructor dependency injection, т.е. используете передачу зависимостей
+через конструктор bean'а.
+
+Способы решения проблемы:
+
+<details><summary markdown="span">Использовать constructor injection с аннотацией @Lazy</summary>
+
+Простой способ разорвать цикл - сказать Spring лениво инициализировать один из bean, то есть вместо полноценной
+инициализации bean он создаст proxy для его внедрения в другой bean. Внедренный bean будет полностью инициализирован
+только тогда, когда он впервые понадобится.
+
+```java
+@Component
+public class CircularDependencyA {
+  private CircularDependencyB circularDependencyBean;
+
+  @Autowired
+  public CircularDependencyA(@Lazy CircularDependencyB circularDependencyBean) {
+    this.circularDependencyBean = circularDependencyBean;
+  }
+}
+
+@Component
+public class CircularDependencyB {
+  private CircularDependencyA circularDependencyBean;
+
+  @Autowired
+  public CircularDependencyB(CircularDependencyA circularDependencyBean) {
+    this.circularDependencyBean = circularDependencyBean;
+  }
+}
+```
+
+</details>
+
+<details><summary markdown="span">Использовать Setter/Field injection</summary>
+
+Одним из самых популярных обходных путей - это использование других типов dependency injection. При внедрении
+зависимостей поля (field) или setter'ы. При таком подходе зависимости не внедряются до тех пор, пока они не потребуются.
+
+```java
+@Component
+public class CircularDependencyA {
+    private CircularDependencyB circularDependencyBean;
+
+    @Autowired
+    public void setCircB(CircularDependencyB circularDependencyBean) {
+        this.circularDependencyBean = circularDependencyBean;
+    }
+
+    public CircularDependencyB getCircularDependencyBean() {
+        return circularDependencyBean;
+    }
+}
+
+@Component
+public class CircularDependencyB {
+  private CircularDependencyA circularDependencyBean;
+
+  @Autowired
+  public void setCircB(CircularDependencyA circularDependencyBean) {
+    this.circularDependencyBean = circularDependencyBean;
+  }
+
+  public CircularDependencyA getCircularDependencyBean() {
+    return circularDependencyBean;
+  }
+}
+```
+
+</details>
+
+<details><summary markdown="span">Использовать PostConstruct</summary>
+
+Другой способ разорвать цикл - внедрить зависимость с помощью `@Autowired` в один из bean, а затем использовать метод,
+аннотированный с помощью `@PostConstruct`, для установки другой зависимости.
+
+```java
+@Component
+public class CircularDependencyA {
+    @Autowired
+    private CircularDependencyB circularDependencyBean;
+
+    @PostConstruct
+    public void init() {
+      circularDependencyBean.setCircularDependencyBean(this);
+    }
+
+    public CircularDependencyB getCircularDependencyBean() {
+        return circularDependencyBean;
+    }
+}
+
+@Component
+public class CircularDependencyB {
+  private CircularDependencyA circularDependencyBean;
+
+  public void setCircularDependencyBean(CircularDependencyA circularDependencyBean) {
+    this.circularDependencyBean = circularDependencyBean;
+  }
+}
+```
+
+</details>
+
+<details><summary markdown="span">Использование ApplicationContextAware и InitializingBean</summary>
+
+Если один из bean реализует `ApplicationContextAware`, то он имеет доступ к контексту Spring и может извлечь из него
+другой bean. Реализуя `InitializingBean`, мы указываем, что этот bean должен выполнить некоторые действия после того,
+как все его свойства были установлены. В этом случае мы хотим вручную установить нашу зависимость.
+
+```java
+@Component
+public class CircularDependencyA implements ApplicationContextAware, InitializingBean {
+  private ApplicationContext context;
+  private CircularDependencyB circularDependencyBean;
+
+  public CircularDependencyB getCircularDependencyBean() {
+    return circularDependencyBean;
+  }
+
+  @Override
+  public void setApplicationContext(ApplicationContext context) throws BeansException {
+    this.context = context;
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    circularDependencyBean = context.getBean(CircularDependencyB.class);
+  }
+}
+
+@Component
+public class CircularDependencyB {
+  private CircularDependencyA circularDependencyBean;
+
+  @Autowired
+  public void setCircA(CircularDependencyA circularDependencyBean) {
+    this.circularDependencyBean = circularDependencyBean;
+  }
+}
+```
+
+</details>
+
+Подробнее см. [здесь](https://www.baeldung.com/circular-dependencies-in-spring).
+
+#### @Autowired @Qualifier @Conditional
+
+Данные аннотации предназначены для управления процессом внедрения зависимостей в Spring:
+- [@Autowired](https://www.baeldung.com/spring-autowire):
+  - включает автоматическое внедрение зависимостей для конструктора/поля/метода (там, где навешана);
+  - выбор bean кандидата для внедрения происходит на основании типа (т.е. по интерфейсу/классу), при этом может быть 
+  сгенерировано исключение в следующих ситуациях:
+    - если не был найден ни один подходящий кандидат:
+      - `NoSuchBeanDefinitionException`;
+    - если было найдено более одного подходящего кандидата (аннотация `@Qualified` помогает в решении данной проблемы):
+      - `NoUniqueBeanDefinitionException`;
+      - исключением является ситуация, когда имя поля/сеттера полностью соответствует имени одного из bean'ов кандидатов 
+      (в этом случае, поведение будет идентично тому, как если бы мы явно использования аннотацию `@Qualified` с 
+      указанием имени бина, равному имени поля/сетера);
+- [@Qualifier](https://www.baeldung.com/spring-qualifier-annotation):
+  - указывает идентификатор/имя bean, который необходимо использовать при внедрении зависимости;
+  - необходима в ситуации, когда имеется несколько подходящих по типу (т.е. по интерфейсу/классу) bean кандидатов для
+  внедрения зависимости;
+- [@Conditional](https://www.baeldung.com/spring-conditional-annotations):
+  - указывает на необходимость создания bean на основании условия, указанного в аннотации:
+    - наличие property и/или определенное его значение:
+      - `@ConditionalOnProperty`;
+    - соответствие регулярному значению:
+      - `@ConditionalOnExpression`;
+    - наличие зарегистрированного bean определенного класса:
+      - `@ConditionalOnBean`;
+    - наличие определенного класса в classpath:
+      - `@ConditionalOnClass`;
+    - соответствие определенной версии java:
+      - `@ConditionalOnJava`;
+    - когда приложение стартует из war (для приложений со встроенным сервером приложений всегда будет `false`):
+      - `@ConditionalOnWarDeployment`.
+
+#### Расскажите про Transaction
+
+В Spring используется аннотация `@Transactional` для оборачивания метода в транзакцию используемой БД.
+
+Spring для выполнения этого либо используем паттерн проектирования proxy (создает наследника данного класса и проксирует
+все вызовы ему, но предварительно оборачивая их в транзакции), либо манипулирует с байткодом классов
+(через cglib) для управления созданием, commit и rollback транзакций. В случае использования proxy, Spring
+игнорирует `@Transactional` в рамках internal method calls (вызовов внутри самого класса).
+
+Оборачивание в транзакцию выглядит примерно следующим образом:
+
+```java
+createTransactionIfNecessary();
+try {
+    callMethod();
+    commitTransactionAfterReturning();
+} catch (exception) {
+    completeTransactionAfterThrowing();
+    throw exception;
+}
+```
+
+#### Расскажите про Transaction Propagation (распространение транзакций)
+
+Transaction propagation выставляется в виде атрибутов аннотации:
+
+```java
+@Transactional(propagation = Propagation.<значение>)
+public void someMethod() {
+    // some code
+}
+```
+
+Типы transaction propagation:
+
+- `REQUIRED` - значение по умолчанию:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет использована существующая транзакция;
+    - если транзакции нет, то будет создана новая;
+- `SUPPORTS`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет использована существующая транзакция;
+    - если транзакции нет, то метод выполнится вне транзакции;
+- `MANDATORY`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет использована существующая транзакция;
+    - если транзакции нет, то будет сгенерировано исключение;
+- `NEVER`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет сгенерировано исключение;
+    - если транзакции нет, то метод выполнится вне транзакции;
+- `NOT_SUPPORTED`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет выполнен suspend (транзакция будет прервана), после чего метод выполнится вне транзакции;
+    - если транзакции нет, то метод выполнится вне транзакции;
+- `REQUIRES_NEW`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет выполнен suspend (транзакция будет прервана), после чего будет создана новая;
+    - если транзакции нет, то будет создана новая;
+- `NESTED`:
+  - Spring проверяет, существует ли активная транзакция:
+    - если транзакция существует, то будет выполнено создание save point (точки отката внутри транзакции в случае 
+    получения исключения внутри вложенной транзакции);
+    - если транзакции нет, то будет создана новая.
 
 Подробнее см. [здесь](https://www.baeldung.com/spring-transactional-propagation-isolation).
 
