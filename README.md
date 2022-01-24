@@ -2955,7 +2955,9 @@ public class CircularDependencyB {
     - соответствие определенной версии java:
       - `@ConditionalOnJava`;
     - когда приложение стартует из war (для приложений со встроенным сервером приложений всегда будет `false`):
-      - `@ConditionalOnWarDeployment`.
+      - `@ConditionalOnWarDeployment`;
+    - соответствие кастомным условиям:
+      - `@Conditional`, указывающий на кастомную реализацию интерфейса `Condition` (подробнее см. [здесь](https://russianblogs.com/article/21241481285/)).
 
 #### Расскажите про Transaction
 
