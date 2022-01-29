@@ -36,7 +36,7 @@ hypervisor type 1), либо программа (hosted hypervisor type 2), об
 [hypervisor type 2](https://ru.wikipedia.org/wiki/%D0%93%D0%B8%D0%BF%D0%B5%D1%80%D0%B2%D0%B8%D0%B7%D0%BE%D1%80)),
 можно отметить следующие: VirtualBox, Parallels Desktop for Mac, QEMU, VMware Player & Workstation.
 
-![VM](images/microservice/hypervisor_types.png)
+![VM](images/hypervisor_types.png)
 
 </details>
 
@@ -49,7 +49,7 @@ hypervisor type 1), либо программа (hosted hypervisor type 2), об
 Операционная система и все приложение, запущенные в рамках одной VM, разделяют hardware ресурсы host'а (физического
 устройство, на котором запущена VM) с учетом квотирования ресурсов между VM на стороне hypervisor.
 
-![VM](images/microservice/vm.png)
+![VM](images/vm.png)
 
 К особенностям VM можно отнести следующие:
 * возможность запуска любой операционной системы (OS);
@@ -71,7 +71,7 @@ hypervisor type 1), либо программа (hosted hypervisor type 2), об
 Другими словами, если VM в качестве средства изоляции использовали hypervisor, то контейнеры поднимаются на уровень выше
 и для изоляции используют средства host'ов ОС, поверх которой работают.
 
-![containers](images/microservice/containers.png)
+![containers](images/containers.png)
 
 Контейнеры размещаются поверх физического сервера и его host'овой операционной системы.  
 Каждый контейнер разделяет ядро host'овой операционной системы, а также, обычно, ряд библиотек.

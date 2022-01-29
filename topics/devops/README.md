@@ -71,7 +71,7 @@ Jenkins Node - это машина на которой выполняются с
 
 #### Могу ли я скрипт сборки хранить в Git
 Да, можно.
-![Pipeline from SCM](images/devops/pipiline-scm.png)
+![Pipeline from SCM](images/pipiline-scm.png)
 
 ---
 

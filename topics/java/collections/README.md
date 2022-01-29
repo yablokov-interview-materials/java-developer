@@ -1,4 +1,4 @@
-### Collections
+### Java Collections
 
 ####  Какие существуют коллекции?
 ToDo: ответ

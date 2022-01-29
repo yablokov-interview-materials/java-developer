@@ -44,7 +44,7 @@ UDP:
 
 #### Уровни модели OSI и модели TCP/IP
 
-![OSI vs TCP/IP](images/network/osi_vs_tcp-ip.png)
+![OSI vs TCP/IP](images/osi_vs_tcp-ip.png)
 
 Подробнее см. [здесь](https://community.fs.com/ru/blog/tcpip-vs-osi-whats-the-difference-between-the-two-models.html),
 либо в рамках кратких видео уроков по [модели OSI](https://www.youtube.com/watch?v=Tt8BTkxz_Vc&list=PLtPJ9lKvJ4oiNMvYbOzCmWy6cRzYAh9B1)
@@ -98,7 +98,7 @@ TLS/SSL относится к 6-му уровню модели OSI (presentation
 Если было получено уведомление о получении N пакетов (ACK), то отправляются следующие N пакетов, т.е. окно "сдвигается"
 на следующую часть потока данных:
 
-![TCP Window](images/network/tcp-window.png)
+![TCP Window](images/tcp-window.png)
 
 Back Pressure осуществляется за счет управления размером окна со стороны получателя:
 * при отправке кумулятивного уведомления о получении TCP пакетов (ACK), в заголовке TCP ответа также указывается
@@ -121,7 +121,7 @@ Back Pressure осуществляется за счет управления р
 Если получателю будет отправлено больше данных, чем он готов сохранить в буфер, то он просто будет откидывать такие
 TCP сегменты.
 
-![TCP Window Flow Control](images/network/tcp-window_flow-control.png)
+![TCP Window Flow Control](images/tcp-window_flow-control.png)
 
 Подробнее см. [здесь](https://blog.wallaroolabs.com/2018/04/how-the-end-to-end-back-pressure-mechanism-inside-wallaroo-works/)
 или в двух видео уроков:
@@ -138,7 +138,7 @@ TCP сегменты.
 После завершения передачи всех HTTP запросов, начинается получение ответов, порядок которых должен соответствовать
 порядку отправки запросов.
 
-![HTTP Pipelining](images/network/http_pipelining.png)
+![HTTP Pipelining](images/http_pipelining.png)
 
 Подробнее см. [здесь](https://en.wikipedia.org/wiki/HTTP_pipelining) или в рамках [видео урока](https://youtu.be/7DitlqcesKI?list=PLtPJ9lKvJ4oiNMvYbOzCmWy6cRzYAh9B1&t=401).
 [Пример использования](https://github.com/apache/httpcomponents-core/blob/5.0.x/httpcore5/src/test/java/org/apache/hc/core5/http/examples/AsyncPipelinedRequestExecutionExample.java).
@@ -156,7 +156,7 @@ TCP сегменты.
 Данный алгоритм скапливает данные в своем буфере до тех пор, пока не будет получено уведомление об успешно получении
 предыдущего TCP пакета (TCP ACK).
 
-![Nagle Algorithm](images/network/nagle_algorithm.png)
+![Nagle Algorithm](images/nagle_algorithm.png)
 
 Параметр TCP_NODELAY используется для отключения данного механизма поведения.
 
