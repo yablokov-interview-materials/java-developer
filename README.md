@@ -7,6 +7,8 @@
 
 ## [Common](topics/common/README.md)
 
+---
+
 ## Java
 
 ### [Base](topics/java/base/README.md)
@@ -18,6 +20,8 @@
 ### [Streams](topics/java/streams/README.md)
 
 ### [Spring](topics/java/spring/README.md)
+
+---
 
 ## Architecture
 
@@ -31,20 +35,36 @@
 
 ### [Reactive Programming](topics/architecture/reactive-programming/README.md)
 
+---
+
 ## [Databases](topics/databases/README.md)
+
+---
 
 ## [Message Brokers](topics/message-brokers/README.md)
 
+---
+
 ## [Cryptography](topics/crypto/README.md)
+
+---
 
 ## VCS (version control systems)
 
 ### [Git](topics/vcs/git/README.md)
 
+---
+
 ## [DevOps](topics/devops/README.md)
+
+---
 
 ## [Network](topics/network/README.md)
 
+---
+
 ## [Linux](topics/linux/README.md)
+
+---
 
 ## [Work Process](topics/work-process/README.md)
