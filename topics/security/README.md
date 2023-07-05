@@ -92,7 +92,11 @@ LIHjWCBORSWMEibq-tnT8ue_deUqZx1K0XxCOXZRrBI
 
 </details>
 
-Подробнее см. [здесь](https://medium.com/@goynikhil/what-is-jwt-jws-jwe-and-jwk-when-we-should-use-which-token-in-our-business-applications-74ae91f7c96b), [здесь](https://ru.wikipedia.org/wiki/JSON_Web_Token) и [здесь](https://jwt.io/).
+Подробнее см.
+1) [medium](https://medium.com/@goynikhil/what-is-jwt-jws-jwe-and-jwk-when-we-should-use-which-token-in-our-business-applications-74ae91f7c96b)
+2) [stackoverflow](https://stackoverflow.com/questions/27640930/what-is-the-difference-between-json-web-signature-jws-and-json-web-token-jwt)
+3) [wiki](https://ru.wikipedia.org/wiki/JSON_Web_Token)
+4) [jwt.io](https://jwt.io/).
 
 #### JWS & JWE
 
