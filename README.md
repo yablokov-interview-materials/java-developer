@@ -45,7 +45,7 @@
 
 ---
 
-## 6. [Cryptography](topics/crypto/README.md)
+## 6. [Security](topics/security/README.md)
 
 ---
 
