@@ -18,9 +18,10 @@
 {
     "type": "DEPOSIT",
     "number": "4054474869669569703",
+    "clientId": "fca1d622-d1d7-49be-936a-f771e7030dc7",
     "currency": "RUR",
     "balance": 1000,
-    "saving_counter": {
+    "savingCounter": {
       "endDate": "...",
       "targetSum": 20000 
     }
