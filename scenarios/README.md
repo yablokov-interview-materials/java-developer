@@ -196,10 +196,22 @@ class MyConfig{
 
 **Ожидаемое решение:**
 ```
-    @Bean
-    public List<MyService> myService(Properties properties){
-        return properties.getMyparam().stream().map(p -> new MyService(p)).toList();     
-    }
+@Bean
+public static BeanDefinitionRegistryPostProcessor myServiceRegistrar(Properties props) {
+    return new BeanDefinitionRegistryPostProcessor() {
+        @Override
+        public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
+            for (String name : props.getServices()) {
+                registry.registerBeanDefinition(
+                    "myService_" + name,
+                    BeanDefinitionBuilder.genericBeanDefinition(MyService.class)
+                        .addConstructorArgValue(name)
+                        .getBeanDefinition()
+                );
+            }
+        }
+    };
+}
 ```
 
 #### Как работают транзакции в Spring?
