@@ -201,14 +201,14 @@ public static BeanDefinitionRegistryPostProcessor myServiceRegistrar(Properties 
     return new BeanDefinitionRegistryPostProcessor() {
         @Override
         public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
-            for (String name : props.getServices()) {
-                registry.registerBeanDefinition(
+            props.getServices().stream()
+                .map(name -> Map.entry(
                     "myService_" + name,
                     BeanDefinitionBuilder.genericBeanDefinition(MyService.class)
                         .addConstructorArgValue(name)
                         .getBeanDefinition()
-                );
-            }
+                ))
+                .forEach(entry -> registry.registerBeanDefinition(entry.getKey(), entry.getValue()));
         }
     };
 }
