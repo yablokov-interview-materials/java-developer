@@ -4,12 +4,22 @@
 * [live-coding](https://code.yandex-team.ru/)
 
 ## 1. Общие вопросы про Computer Science и REST API
-### 1.1 Практическое задание про REST API
-Представьте себе вымышленный банк, который хочет предоставить своим партнёрам возможность интеграции с его системой через REST API. 
-Цель интеграции — обеспечить доступ к информации о банковских счетах клиентов, а также дать возможность создания и редактирования этих счетов.
-Задача — спроектировать REST API.
 
-**Шаблон для live-coding:**
+Наше interview построено следующим образом:
+* не будем спрашивать технические вопросы напрямую (это слишком нудно);
+* вместо этого, мы с нуля спроектируем сервис;
+* после чего попробуем найти у устранить его узкие места.
+
+Представьте себе, что мы проектируем сервис некоторого вымышленного банка, 
+который хочет предоставить своим партнёрам возможность интеграции с его системой через REST API.
+
+### 1.1 Практическое задание про REST API
+
+Цель интеграции по REST API заключается в предоставлении:
+* API для создания и редактирования счетов и карт клиента;
+* API для получения информации о банковских счетах и картах клиента.
+
+**Шаблон для live-coding REST API:**
 ```
 # API для получения списка счетов (accounts) клиента банка. 
 # Это могут быть как вклады, расчетные счета, накопительные счета
@@ -28,19 +38,175 @@
 }
 
 # Получение всех счетов клиента
-<METHOD> /...
+<METHOD> <base-url>/<path>
+<STATUS>
 
-# Получение конкретного счета клиента по номеру (number)
-<METHOD> /...
+# Получение конкретного счета клиента по номеру 
+<METHOD> <base-url>/<path>
+<STATUS>
+
+# Получение всех карт счета клиента
+<METHOD> <base-url>/<path>
+<STATUS>
 
 # Создание счета клиента
-<METHOD> /...
+<METHOD> <base-url>/<path>
+<STATUS>
 
 # Редактирование счета клиента
-<METHOD> /...
+<METHOD> <base-url>/<path>
+<STATUS>
 
 # Удаление счета клиента
-<METHOD> /...
+<METHOD> <base-url>/<path>
+<STATUS>
+```
+
+**Шаблон для live-coding Spring Controller REST API:**
+```java
+@RestController
+class AccountController {
+    private int apiCallCounter = 0;
+    @Autowired
+    private AccountMapper dtoMapper;
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @RequestMapping(path = "/clients/{clientId}/accounts", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountRsDto createAccount(@PathVariable("clientId") String clientId,
+                                       @RequestBody AccountRqDto accountDto) {
+        apiCallCounter++;
+        AccountEntity accountEntity = accountMapper.mapCreateAccountRq(clientId, accountDto);
+        accountEntity = accountRepository.createAccount(accountEntity);
+        return accountMapper.mapGetAccountEntity(accountEntity);
+    }
+
+    @RequestMapping(path = "/clients/{clientId}/accounts/{accountId}", method = RequestMethod.PUT)
+    @ResponseStatus(HttpStatus.OK)
+    public AccountRsDto updateAccount(@PathVariable("clientId") String clientId,
+                                       @PathVariable("accountId") String accountId,
+                                       @RequestBody AccountRqDto account) {
+        apiCallCounter++;
+        AccountEntity accountEntity = accountMapper.mapUpdateAccountRq(clientId, accountId, accountDto);
+        accountEntity = accountRepository.updateAccount(accountEntity);
+        return accountMapper.mapGetAccountEntity(accountEntity);
+    }
+
+    @RequestMapping(path = "/clients/{clientId}/accounts/{accountId}", method = RequestMethod.DELETE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAccount(@PathVariable("clientId") String clientId,
+                              @PathVariable("accountId") String accountId) {
+        apiCallCounter++;
+        accountRepository.deleteAccount(clientId, accountId);
+    }
+
+    @RequestMapping(path = "/clients/{clientId}/accounts", method = RequestMethod.GET)
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRsDto> getAccounts(String clientId) {
+        apiCallCounter++;
+        List<AccountEntity> accountsEntity = accountRepository.getAccounts(clientId);
+        List<AccountDto> accountsDto = new ArrayList();
+        for (AccountEntity accountEntity: accountsEntity) {
+            accountsDto.add(dtoMapper.mapGetAccountEntity(accountEntity));
+        }
+        return accountsDto;
+    }
+}
+
+interface AccountMapper {
+    AccountEntity mapCreateAccountRq(String clientId, AccountDto accountDto);
+    AccountEntity mapUpdateAccountRq(String clientId, String accountId, AccountDto dto);
+    AccountRsDto mapGetAccountEntity(AccountEntity entity);
+}
+
+interface AccountRepository {
+    AccountEntity createAccount(AccountEntity entity);
+    AccountEntity updateAccount(AccountEntity entity);
+    AccountEntity deleteAccount(String clientId, String accountId);
+    List<AccountEntity> getAccounts(String clientId);
+}
+```
+
+**Шаблон для live-coding SQL:**
+```
+CLIENTS (
+    client_id
+    ...
+)
+
+ACCOUNTS (
+    account_id
+    client_id
+    ...
+)
+
+CARDS (
+    account_id,
+    card_id,
+    balance,
+    expire_date
+    ...
+)
+```
+
+**Шаблон для live-coding для GC:**
+```java
+interface ThreadManager {
+    List<Thread> getThreads();
+}
+
+interface Thread {
+    void pause();
+    void resume();
+    Stack getStack();
+}
+
+class Stack {
+    List<StackFrame> frames;
+}
+
+class StackFrame {
+    Method caller;
+    List<Variable> variables;
+}
+
+class Heap {
+    Map<Long, Object> objects;
+}
+
+class Object {
+    boolean isVisited;
+    List<Field> fields;
+}
+
+class Field {
+    String name;
+    Variable variable;
+}
+
+class Variable {
+    boolean isPrimitive;
+    long valueOrRef;
+}
+
+@RequiredArgsConstructor
+class GarbageCollector {
+    private final Heap heap;
+    private final ThreadManager threadManager;
+
+    void clean() {
+        // ToDo:
+    }
+
+    void markHeapObjects() {
+        // ToDo:
+    }
+
+    void cleanUnmarkedHeapObjects() {
+        // ToDo:
+    }
+}
 ```
 
 ### 1.2. Общие вопросы по сетям и HTTP
