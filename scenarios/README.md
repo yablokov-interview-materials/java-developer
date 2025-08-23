@@ -15,7 +15,7 @@
 Представьте себе, что мы проектируем сервис некоторого вымышленного банка,
 который хочет предоставить своим партнёрам возможность интеграции с его системой через REST API.
 
-### 1.1 Практическое задание про REST API
+### 1.1 Практическое задание по REST API
 
 Цель интеграции по REST API заключается в предоставлении:
 
@@ -82,11 +82,43 @@ base-url = https://bank.test
 }
 ```
 
-### 1.2 Практическое задание про Spring Controller
+### 1.2 Flow запроса из браузера до нашего сервера приложений
 
-Как в Spring помечается класс, который принимает HTTP запросы?
+Допустим мы вставили в адрессную строку браузера следующий URL:  
+https://bank.test/api/v1/clients/{clientId}/accounts/{accountId}
 
-Как помечаются его методы?
+Как браузер поймет куда отправлять запрос?
+
+___
+
+Ожидания от кандидата по данному пункту:
+
+* укажет какая часть URL используется для маршрутизации запроса (host);
+* расскажет как host преобразуется в IP (в частности, хочется услышать общие знания по DNS):
+    * для резолвинга используются DNS сервера;
+    * откуда бурутся адреса DNS серверов (в идеале услышать что-то про DHCP и прочее);
+* укажет куда ведет полученный IP (с учетом предположения, что наш сервис развернут в нескольких экземплярах):
+    * MVP: укажет на балансировщик;
+    * идеально: информация про VRRP (или альтернативу) + NAT + LoadBalancer;
+* расскажет на какой port пойдет запрос (443);
+* расскажет про отличия HTTPS от HTTP:
+    * информация про TLS handshake:
+        * информация про цепочки сертификатов, и как они проверяются;
+        * информация про сессионные ключи шифрования, и откуда они берутся;
+* расскажет про то, как в K8S добраться до нашего сервиса:
+    * MVP: ingress -> service -> pod
+    * идеально: также услышать общее понимание того, как в k8s это все работает (локальный DNS с настройкой linux
+      resolv.conf и прочее).
+
+___
+
+### 1.3 Практическое задание по Spring Controller
+
+HTTP запрос прилетел в наш spring сервис:
+
+* чем spring отличается от spring boot;
+* как в Spring помечается класс, который принимает HTTP запросы?
+* как помечаются его методы?
 
 Предположим, что у нас имеется следующий Controller для обработки запросов (см. код из шаблона ниже).
 
@@ -97,14 +129,21 @@ base-url = https://bank.test
 Если нет, то что сделано некорректно?
 Можете, пожалуйста, поправить код так, чтобы все работало корректно.
 
-Примечание: Ожидается, что кандидат:
+___
+
+Ожидания от кандидата по данному пункту:
 
 * объяснит почему здесь будет проблема, во время объяснения через доп вопросы, чтобы узнать понимает ли он:
     * что это Controller имеет Spring scope=Singleton, поэтому счетчик общий на все вызовы;
     * что HTTP запросы будут обрабатываться параллельно;
     * что для параллельной обработки используется pool потоков:
         * также можно спросить его почему бы не создавать поток на горячую, зачем иметь ограниченный в размере пул;
-        * в процессе объяснения узнать у человека что за ресурсы потребляет поток (хочется услышать, что помимо CPU еще и Stack - потом это пригодится в вопросе про GC);
+        * в процессе объяснения узнать у человека что за ресурсы потребляет поток (хочется услышать, что помимо CPU еще
+          и Stack - потом это пригодится в вопросе про GC);
+    * что поток от начала до конца будет заниматься обработкой HTTP запроса, включая ожидаение на блокирующие IO
+      вызовы (в классической синхронной модели сервера приложений).
+
+___
 
 **Шаблон для live-coding Spring Controller REST API:**
 
@@ -179,6 +218,20 @@ interface AccountRepository {
 }
 ```
 
+### 1.3 Наводящие вопросы на понимание Spring
+
+Как в примере кода выше (без его изменения) сделать так, чтобы:
+
+* при запуске на локали AccountRepository выдавал заглушечные значения;
+* при запуске на стенде AccountRepository обращался к БД.
+
+---
+
+В ответе ожидается информация про две реализации данного интерфейса (в виде двух Spring Bean'ов), нужная из которых
+выбирается либо через Spring Profile, либо через OnCondition.
+
+### 1.4 Практическое задание по SQL
+
 **Шаблон для live-coding SQL:**
 
 ```
@@ -200,68 +253,6 @@ CARDS (
     expire_date
     ...
 )
-```
-
-**Шаблон для live-coding для GC:**
-
-```java
-interface ThreadManager {
-    List<Thread> getThreads();
-}
-
-interface Thread {
-    void pause();
-
-    void resume();
-
-    Stack getStack();
-}
-
-class Stack {
-    List<StackFrame> frames;
-}
-
-class StackFrame {
-    Method caller;
-    List<Variable> variables;
-}
-
-class Heap {
-    Map<Long, Object> objects;
-}
-
-class Object {
-    boolean isVisited;
-    List<Field> fields;
-}
-
-class Field {
-    String name;
-    Variable variable;
-}
-
-class Variable {
-    boolean isPrimitive;
-    long valueOrRef;
-}
-
-@RequiredArgsConstructor
-class GarbageCollector {
-    private final Heap heap;
-    private final ThreadManager threadManager;
-
-    void clean() {
-        // ToDo:
-    }
-
-    void markHeapObjects() {
-        // ToDo:
-    }
-
-    void cleanUnmarkedHeapObjects() {
-        // ToDo:
-    }
-}
 ```
 
 ### 1.2. Общие вопросы по сетям и HTTP
@@ -387,7 +378,63 @@ GC — автоматическое освобождение памяти, Stop-
 **Шаблон для live-coding:**
 
 ```java
+interface ThreadManager {
+    List<Thread> getThreads();
+}
 
+interface Thread {
+    void pause();
+
+    void resume();
+
+    Stack getStack();
+}
+
+class Stack {
+    List<StackFrame> frames;
+}
+
+class StackFrame {
+    Method caller;
+    List<Variable> variables;
+}
+
+class Heap {
+    Map<Long, Object> objects;
+}
+
+class Object {
+    boolean isVisited;
+    List<Field> fields;
+}
+
+class Field {
+    String name;
+    Variable variable;
+}
+
+class Variable {
+    boolean isPrimitive;
+    long valueOrRef;
+}
+
+@RequiredArgsConstructor
+class GarbageCollector {
+    private final Heap heap;
+    private final ThreadManager threadManager;
+
+    void clean() {
+        // ToDo:
+    }
+
+    void markHeapObjects() {
+        // ToDo:
+    }
+
+    void cleanUnmarkedHeapObjects() {
+        // ToDo:
+    }
+}
 ```
 
 ## 4. Kotlin
