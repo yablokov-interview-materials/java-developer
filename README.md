@@ -1,6 +1,6 @@
 # Материалы для собеседований на позицию Java Developer (и выше).
 
-## [Сценарий проведения интервью](scenarios/README.md)
+## [Сценарий проведения интервью](interview-scenarios/README.md)
 
 ## 1. [Common](topics/common/README.md)
 
