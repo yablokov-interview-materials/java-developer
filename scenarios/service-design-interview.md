@@ -394,7 +394,7 @@ WHERE CLIENTS.client_id = :client_id;
     * PG реализует MVCC (Multi-Version Concurrency Control), поэтому старые данные не удаляются сами по себе
     * для удаления неактуальных данных нужно вызывать vacuum
 
-### 5. Практическое задание по Message Brokers
+### 6. Практическое задание по Message Brokers
 
 Итак, с БД закончили, двигаемся дальше.
 
@@ -436,3 +436,7 @@ WHERE CLIENTS.client_id = :client_id;
     * чтение одного сообщения несколькими: информация про виды Exchange (Fanout / Direct / Topic / Headers), Bindings и
       Queue
     * последовательность чтения: гарантирована из коробки
+
+### 7. DevOps
+
+ToDo:
