@@ -67,15 +67,11 @@ base-url = https://bank.test
 <METHOD> <base-url>/<path>
 <STATUS>
 
-# Получение всех карт счета клиента
-<METHOD> <base-url>/<path>
-<STATUS>
-
 # Создание счета клиента
 <METHOD> <base-url>/<path>
 <STATUS>
 
-# body
+# пример body
 {
   "currency": "RUB",
   "type": "SAVINGS", 
@@ -90,23 +86,6 @@ base-url = https://bank.test
 # Удаление счета клиента
 <METHOD> <base-url>/<path>
 <STATUS>
-
-# Создание карты счета клиента
-<METHOD> <base-url>/<path>
-<STATUS>
-
-# body
-{
-  "type": "DEBIT",
-  "design": "CLASSIC",
-  "deliveryAddress": {
-    "country": "RU",
-    "city": "Москва",
-    "street": "ул. Арбат, д. 15",
-    "postalCode": "119019"
-  },
-  "holderName": "IVAN IVANOV"
-}
 ```
 
 ## 3. Flow запроса из браузера до нашего сервера приложений
